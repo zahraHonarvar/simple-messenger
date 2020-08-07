@@ -9,11 +9,15 @@ export default function ListItem(
     time,
     avatar,
     unreadMessageCount,
-    selected = false
+    selected = false,
+    onSelect
   }
 ) {
   return (
-    <div className={styles['list-item'] + ' ' + (selected ? styles[('selected')] : '')}>
+    <div
+      onClick={onSelect}
+      className={styles['list-item'] + ' ' + (selected ? styles[('selected')] : '')}
+    >
       <div className={styles['avatar']}>
         <Avatar name={name} url={avatar} />
       </div>
@@ -21,9 +25,9 @@ export default function ListItem(
       <div className={styles['message']}>{text}</div>
       <div className={styles['time']}>{time}</div>
       <div className={styles['info']}>
-        <div>
+        {unreadMessageCount !== 0 && <div>
           {unreadMessageCount}
-        </div>
+        </div>}
       </div>
     </div>
   )
