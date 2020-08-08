@@ -18,7 +18,6 @@ export default function Index() {
   const selectedChatMessages = messages.filter(x => x.chatId === selectedChatId);
 
   function handleChatSelect(id) {
-    window.history.pushState({page: 1}, "title 1", "?page=1")
     dispatch(chatSelected(id));
   }
 
