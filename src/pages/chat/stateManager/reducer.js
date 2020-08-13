@@ -2,7 +2,7 @@ import { ACTIONS } from './actionCreator'
 export const INIT_STATE = {
   userId: '1',
   chatList: [
-    { time: '18:05', unreadMessageCount: 10, name: 'Reza', avatar: '/avatar.png', id: '1' },
+    { time: '18:05', unreadMessageCount: 10, name: 'Zahra', avatar: '/avatar.png', id: '1' },
     { time: '18:05', unreadMessageCount: 10, name: 'Mohammad', avatar: '/avatar.png', id: '2' },
     { time: '18:05', unreadMessageCount: 10, name: 'Mina', avatar: '/avatar.png', id: '3' },
     { time: '18:05', unreadMessageCount: 10, name: 'Sarah', avatar: '/avatar.png', id: '4' },
