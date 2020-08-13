@@ -4,11 +4,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBars, faSearch, faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import styles from './appStatus.module.scss';
 
-function useLegacyState(initState) {
-  const [state, setState] = useState(initState);
-  return [state, newState => setState({ ...state, ...newState })]
-}
-
 export default function AppStatus() {
   const [mode, setMode] = useState('list');
   const input = useRef(null);
