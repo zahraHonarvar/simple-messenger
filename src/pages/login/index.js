@@ -15,8 +15,9 @@ export default function Index() {
     // TODO: validate `name` first.
     signIn(name)
       .then(({ success, result: user }) => {
-        // TODO: handle failture.
-        dispatch(userSingedIn(user))
+        if (success) {
+          dispatch(userSingedIn(user))
+        }
       })
   }
 

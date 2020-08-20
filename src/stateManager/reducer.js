@@ -3,38 +3,14 @@ export const INIT_STATE = {
   name: '',
   userId: null,
   chatList: [
-    // { time: '18:05', unreadMessageCount: 10, name: 'Reza', avatar: '/avatar.png', id: '1' },
-    // { time: '18:05', unreadMessageCount: 10, name: 'Mohammad', avatar: '/avatar.png', id: '2' },
-    // { time: '18:05', unreadMessageCount: 10, name: 'Mina', avatar: '/avatar.png', id: '3' },
-    // { time: '18:05', unreadMessageCount: 10, name: 'Sarah', avatar: '/avatar.png', id: '4' },
   ],
   messages: [
-    // { chatId: '1', id: '1', text: 'Hi', userId: '1' },
-    // { chatId: '1', id: '2', text: 'Hi there', userId: '2' },
-    // { chatId: '2', id: '1', text: 'Hi', userId: '1' },
-    // { chatId: '2', id: '2', text: 'Hi there', userId: '2' },
-    // { chatId: '2', id: '3', text: 'Hi there', userId: '2' },
-    // { chatId: '3', id: '1', text: 'Hi', userId: '1' },
-    // { chatId: '3', id: '2', text: 'Hi there', userId: '2' },
-    // { chatId: '3', id: '4', text: 'Hi there', userId: '2' },
-    // { chatId: '4', id: '5', text: 'Hi there', userId: '2' },
-    // { chatId: '4', id: '31', text: 'Hi there', userId: '2' },
-    // { chatId: '4', id: '33', text: 'Hi there', userId: '2' },
-    // { chatId: '4', id: '32', text: 'Hi there', userId: '2' },
-    // { chatId: '4', id: '34', text: 'Hi there', userId: '2' },
-    // { chatId: '4', id: '35', text: 'Hi there', userId: '2' },
-    // { chatId: '4', id: '39', text: 'Hi there', userId: '2' },
-    // { chatId: '4', id: '37', text: 'Hi there', userId: '2' },
-    // { chatId: '4', id: '13', text: 'Hi there', userId: '2' },
-    // { chatId: '4', id: '23', text: 'Hi there', userId: '2' },
-    // { chatId: '4', id: '43', text: 'Hi there', userId: '2' },
-    // { chatId: '4', id: '413', text: 'Hi there', userId: '2' },
-    // { chatId: '4', id: '322', text: 'Hi there', userId: '2' },
-    // { chatId: '4', id: '3333', text: 'Hi there', userId: '2' },
-    // { chatId: '4', id: '315', text: 'Hi there', userId: '2' },
   ],
-  selectedChatId: null
+  selectedChatId: null,
+  contacts: []
 }
+
+// `chat/start/user/{userId}`
 
 export function reducer(state, action) {
   return (ACTION_HANDLERS[action.type] || (() => state))(state, action.payload)
@@ -45,6 +21,12 @@ const ACTION_HANDLERS = {
   [ACTIONS.MESSAGE_SUBMITTED]: handleMessageSubmitted,
   [ACTIONS.CHAT_CLOSED]: handleChatClosed,
   [ACTIONS.USER_SIGNED_IN]: handleSignIn,
+  [ACTIONS.CONTACTS_LOADED]: handleContactsLoaded,
+  [ACTIONS.CHATS_LOADED]: handleChatsLoaded,
+  [ACTIONS.INIT_DATA_LOADED]: handleInitDataLoaded,
+  [ACTIONS.CHAT_CREATED]: handleChatCreated,
+  [ACTIONS.CHAT_MESSAGES_LOADED]: handleLoadChatMessages,
+  [ACTIONS.CHAT_MESSAGES_PREPENDED]: handleChatMessagePrepended,
 }
 
 function handleChatSelected(state, payload) {
@@ -91,4 +73,70 @@ function handleSignIn(state, payload) {
     name: payload.name,
     userId: payload.id
   };
+}
+
+function handleContactsLoaded(state, payload) {
+  return {
+    ...state,
+    contacts: payload
+  }
+}
+
+function handleChatsLoaded(state, payload) {
+  return {
+    ...state,
+    chatList: payload
+  }
+}
+
+function handleInitDataLoaded(state, payload) {
+  return {
+    ...state,
+    chatList: payload.chats.map(item => ({ ...item, avatar: '/avatar.png' })),
+    contacts: payload.contacts.filter(item =>
+      item.id !== state.userId)
+  }
+}
+
+function handleChatCreated(state, { chatId, name }) {
+  let newChatList = state.chatList;
+  if (!state.chatList.some(x => x.id === chatId)) {
+    const newChat = {
+      time: '',
+      unreadMessageCount: 0,
+      avatar: '/avatar.png',
+      id: chatId,
+      name
+    };
+    newChatList = [newChat, ...state.chatList]
+  }
+  return {
+    ...state,
+    selectedChatId: chatId,
+    chatList: newChatList
+  }
+}
+
+function handleLoadChatMessages(state, { chatId, data }) {
+  return {
+    ...state,
+    messages: [
+      ...state.messages,
+      ...data.messages.map(msg =>
+        ({ chatId, id: msg.id, text: msg.content, userId: msg.userId }))
+    ],
+    selectedChatId: chatId
+  }
+}
+
+function handleChatMessagePrepended(state, { chatId, data }) {
+  return {
+    ...state,
+    messages: [
+      ...data.messages.map(msg =>
+        ({ chatId, id: msg.id, text: msg.content, userId: msg.userId })),
+      ...state.messages
+    ],
+    selectedChatId: chatId
+  }
 }

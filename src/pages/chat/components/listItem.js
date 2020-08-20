@@ -24,11 +24,11 @@ export default function ListItem(
       <div className={styles['name']}>{name}</div>
       <div className={styles['message']}>{text}</div>
       <div className={styles['time']}>{time}</div>
-      <div className={styles['info']}>
-        {unreadMessageCount !== 0 && <div>
+      {!!unreadMessageCount && <div className={styles['info']}>
+        <div>
           {unreadMessageCount}
-        </div>}
-      </div>
+        </div>
+      </div>}
     </div>
   )
 }
