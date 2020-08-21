@@ -9,6 +9,8 @@ export const ACTIONS = {
   CHAT_CREATED: 'CHAT_CREATED',
   CHAT_MESSAGES_LOADED: 'CHAT_MESSAGES_LOADED',
   CHAT_MESSAGES_PREPENDED: 'CHAT_MESSAGES_PREPENDED',
+  NEW_USER_REGISTERED: 'NEW_USER_REGISTERED',
+  NEW_MESSAGE_RECEIVED: 'NEW_MESSAGE_RECEIVED',
 }
 
 export const chatSelected = id => ({ type: ACTIONS.CHAT_SELECTED, payload: id })
@@ -24,3 +26,5 @@ export const loadChatMessages = (chatId, data) =>
   ({ type: ACTIONS.CHAT_MESSAGES_LOADED, payload: { chatId, data } })
 export const prependChatMessages = (chatId, data) =>
 ({ type: ACTIONS.CHAT_MESSAGES_LOADED, payload: { chatId, data } })
+export const newUserRegistered = user => ({ type: ACTIONS.NEW_USER_REGISTERED, payload: user })
+export const newMessageReceived = data => ({ type: ACTIONS.NEW_MESSAGE_RECEIVED, payload: data })

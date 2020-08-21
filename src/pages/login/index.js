@@ -27,7 +27,7 @@ export default function Index() {
         history.push('/chat');
       }
     },
-    [userId]
+    [userId, history]
   )
 
   return (

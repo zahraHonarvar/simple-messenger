@@ -27,6 +27,8 @@ const ACTION_HANDLERS = {
   [ACTIONS.CHAT_CREATED]: handleChatCreated,
   [ACTIONS.CHAT_MESSAGES_LOADED]: handleLoadChatMessages,
   [ACTIONS.CHAT_MESSAGES_PREPENDED]: handleChatMessagePrepended,
+  [ACTIONS.NEW_USER_REGISTERED]: handleNewUserRegistered,
+  [ACTIONS.NEW_MESSAGE_RECEIVED]: handleNewMessageReceived,
 }
 
 function handleChatSelected(state, payload) {
@@ -90,11 +92,30 @@ function handleChatsLoaded(state, payload) {
 }
 
 function handleInitDataLoaded(state, payload) {
+  const messages = [...state.messages];
+  payload.chats.forEach(chat => {
+    if (chat.lastMessage) {
+      messages.push({
+        chatId: chat.id,
+        id: chat.lastMessage.id,
+        text: chat.lastMessage.content,
+        userId: chat.lastMessage.userId,
+        time: chat.lastMessage.date
+      });
+    }
+  })
   return {
     ...state,
-    chatList: payload.chats.map(item => ({ ...item, avatar: '/avatar.png' })),
+    chatList: payload.chats.map(item => (
+      {
+        ...item,
+        avatar: '/avatar.png',
+        time: item.lastMessage ? item.lastMessage.date : null
+      }
+    )),
     contacts: payload.contacts.filter(item =>
-      item.id !== state.userId)
+      item.id !== state.userId),
+    messages
   }
 }
 
@@ -118,14 +139,25 @@ function handleChatCreated(state, { chatId, name }) {
 }
 
 function handleLoadChatMessages(state, { chatId, data }) {
+  const newChatList = [...state.chatList]
+  const index = state.chatList.findIndex(x => x.id === chatId);
+  newChatList.splice(
+    index,
+    1,
+    {
+      ...state.chatList[index],
+      unreadMessageCount: 0
+    }
+  )
   return {
     ...state,
     messages: [
-      ...state.messages,
+      ...state.messages.filter(x => x.chatId !== chatId),
       ...data.messages.map(msg =>
-        ({ chatId, id: msg.id, text: msg.content, userId: msg.userId }))
+        ({ chatId, id: msg.id, text: msg.content, userId: msg.userId, time: msg.date }))
     ],
-    selectedChatId: chatId
+    selectedChatId: chatId,
+    chatList: newChatList
   }
 }
 
@@ -139,4 +171,59 @@ function handleChatMessagePrepended(state, { chatId, data }) {
     ],
     selectedChatId: chatId
   }
+}
+
+function handleNewUserRegistered(state, user) {
+  if (state.contacts.some(x => x.id === user.id)) {
+    return state;
+  }
+  return {
+    ...state,
+    contacts: [
+      ...state.contacts,
+      { id: user.id, title: user.name }
+    ]
+  }
+}
+
+function handleNewMessageReceived(state, { chatId, message }) {
+  const newChatList = [...state.chatList];
+  if (!state.chatList.some(x => x.id === chatId)) {
+    const newChat = {
+      time: message.date,
+      unreadMessageCount: 1,
+      avatar: '/avatar.png',
+      id: chatId,
+      name: state.contacts.find(x => x.id === message.userId).title
+    }
+    newChatList.push(newChat);
+  }
+  else if (state.selectedChatId !== chatId) {
+    const index = state.chatList.findIndex(x => x.id === chatId);
+    newChatList.splice(
+      index,
+      1,
+      {
+        ...state.chatList[index],
+        unreadMessageCount: state.chatList[index].unreadMessageCount + 1,
+        time: message.date
+      }
+    )
+  }
+  const newMessages = [
+    ...state.messages,
+    {
+      chatId,
+      id: message.id,
+      text: message.content,
+      userId: message.userId,
+      time: message.date
+    }
+  ]
+  return {
+    ...state,
+    messages: newMessages,
+    chatList: newChatList
+  }
+
 }

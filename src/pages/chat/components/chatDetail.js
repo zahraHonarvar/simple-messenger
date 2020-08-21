@@ -7,7 +7,8 @@ import styles from './chatDetail.module.scss';
 import { getChatMessages } from '../../../services/main';
 import { useDispatch } from '../../../context/dispatcherContext';
 import { useAppState } from '../../../context/appStateContext';
-import { loadChatMessages, prependChatMessages } from '../../../stateManager/actionCreator';
+import { prependChatMessages } from '../../../stateManager/actionCreator';
+import TextMessage from './textMessage';
 
 export default function ChatDetail(
   {
@@ -45,26 +46,26 @@ export default function ChatDetail(
   useEffect(
     () => {
       function handleScroll() {
-        if (messageContainer.current.scrollTop == 0) {
-          console.log(messages);
+        if (messageContainer.current.scrollTop === 0) {
           getChatMessages(selectedChatId, userId, messages[messages.length - 1].id)
             .then(data => {
               dispatch(prependChatMessages(selectedChatId, data.result));
             })
         }
       }
-      messageContainer.current.addEventListener('scroll', handleScroll);
+      const msgContainer = messageContainer.current;
+      msgContainer.addEventListener('scroll', handleScroll);
       return () => {
-        messageContainer.current.removeEventListener('scroll', handleScroll);
+        msgContainer.removeEventListener('scroll', handleScroll);
       }
     },
-    [selectedChatId, messages, userId]
+    [selectedChatId, messages, userId, dispatch]
   )
 
   useEffect(
     () => {
       if (lastEmptyMessage.current && messages.length > 0) {
-        if(messages[messages.length -1].text === lastMessage.current) {
+        if (messages[messages.length - 1].text === lastMessage.current) {
           lastEmptyMessage.current.scrollIntoView({ behavior: 'smooth' })
         }
       }
@@ -98,13 +99,12 @@ export default function ChatDetail(
         <ul className={styles['messages-panel']} ref={messageContainer}>
           {
             messages.map((message, index) => {
-              return <li
+              return <TextMessage
                 ref={messages.length === index + 1 ? lastEmptyMessage : null}
-                className={styles[message.me ? 'me' : '']}
+                me={message.me}
+                text={message.text}
                 key={message.id}
-              >
-                {message.text}
-              </li>
+              />
             })
           }
         </ul>

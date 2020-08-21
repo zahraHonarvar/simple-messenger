@@ -1,4 +1,4 @@
-import React, { useReducer, useState, useCallback, useRef } from 'react';
+import React, { useReducer } from 'react';
 import { Route, BrowserRouter as Router, Switch } from 'react-router-dom';
 import MainRoutes from './routes/main';
 import Layout from './layout/index';
@@ -7,21 +7,6 @@ import { Provider as DispatchProvider } from './context/dispatcherContext';
 import { INIT_STATE, reducer } from './stateManager/reducer';
 
 const Routes = MainRoutes();
-
-function useMyReducer(reducer, initState) {
-  const [globalState, setState] = useState(initState);
-  const state = useRef(initState);
-
-  const sss = useCallback(
-    function dispatch(action) {
-      state.current = reducer(state.current, action);
-      setState(state.current);
-    },
-    [state, setState, reducer]
-  )
-
-  return [globalState, sss];
-}
 
 function App() {
   const [state, dispatch] = useReducer(reducer, INIT_STATE);

@@ -4,12 +4,13 @@ import ListItem from './components/listItem';
 import List from './components/list';
 import ChatDetail from './components/chatDetail';
 import styles from './index.module.scss';
-import { chatSelected, submitMessage, closeChat, contactsLoaded, chatsLoaded, initDataLoaded, loadChatMessages } from '../../stateManager/actionCreator';
+import { newUserRegistered, closeChat, initDataLoaded, loadChatMessages, newMessageReceived } from '../../stateManager/actionCreator';
 import { useAppState } from '../../context/appStateContext';
 import { useDispatch } from '../../context/dispatcherContext';
 import { loadContacts, loadRecentChats, submitTextMessage, getChatMessages } from '../../services/main';
 import io from 'socket.io-client';
 import { baseUrl } from '../../utility/request';
+import moment from 'moment';
 
 export default function Index() {
   const { userId, chatList, messages, selectedChatId } = useAppState();
@@ -20,22 +21,44 @@ export default function Index() {
     [chatList, selectedChatId]
   );
 
+  const sortedChatList = useMemo(
+    () => {
+      return chatList
+        .slice()
+        .sort((a, b) => {
+          const lastMessageA = messages.filter(x => x.chatId === a.id);
+          const lastMessageB = messages.filter(x => x.chatId === b.id);
+          if(!lastMessageA && !lastMessageB) {
+            return 0;
+          }
+          else if(!lastMessageA && lastMessageB) {
+            return -1;
+          }
+          else if(!lastMessageB && lastMessageA) {
+            return +1
+          }
+          else {
+            return moment(lastMessageB.time).isBefore(lastMessageA.time) ? 1 : -1
+          }
+        })
+    },
+    [chatList, messages]
+  )
+
   const selectedChatMessages = messages.filter(x => x.chatId === selectedChatId);
 
   function handleChatSelect(id) {
+    if (id === selectedChatId) {
+      return;
+    }
     getChatMessages(id, userId)
       .then(data => {
-        // dispatch(chatSelected(id));
         dispatch(loadChatMessages(id, data.result));
       })
   }
 
   function handleSubmit(text) {
-    submitTextMessage(userId, selectedChatId, text)
-      .then((data) => {
-        console.log(data);
-        dispatch(submitMessage(text));
-      })
+    submitTextMessage(userId, selectedChatId, text);
   }
 
   function handleClose() {
@@ -57,23 +80,31 @@ export default function Index() {
           );
         })
     },
-    [userId]
+    [userId, dispatch]
   )
 
-  // useEffect(
-  //   () => {
-  //     io(baseUrl)
-  //   },
-  //   []
-  // )
+  useEffect(
+    () => {
+      const socket = io(baseUrl);
+      socket.emit('online', userId);
+
+      socket.on('new-user', user => {
+        dispatch(newUserRegistered(user))
+      });
+
+      socket.on('new-message', data => {
+        dispatch(newMessageReceived(data))
+      })
+    },
+    [userId, dispatch]
+  )
 
   return (
     <div className={styles['layout']}>
       <div className={styles['side']}>
         <AppStatus />
         <List>
-          {chatList.map(chat => {
-
+          {sortedChatList.map(chat => {
             const lastMessage = messages.filter(x => x.chatId === chat.id);
             return <ListItem
               selected={chat.id === selectedChatId}
@@ -81,7 +112,7 @@ export default function Index() {
               key={chat.id}
               name={chat.name}
               avatar={chat.avatar}
-              time={chat.time}
+              time={lastMessage.length === 0 ? '' : lastMessage[lastMessage.length - 1].time}
               unreadMessageCount={chat.unreadMessageCount}
               text={lastMessage.length === 0 ? '' : lastMessage[lastMessage.length - 1].text}
             />
